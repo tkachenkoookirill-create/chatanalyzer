@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone, timedelta
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-from telethon.tl.types import User
+from telethon.tl.types import User, Message
 import config
 
 _session_str = os.getenv("SESSION_STRING", "").replace("\n", "").replace("\r", "").replace(" ", "").strip()
@@ -19,13 +19,15 @@ async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
         raise Exception("Telegram session is invalid. Regenerate SESSION_STRING.")
 
     entity = await client.get_entity(group_identifier)
-    async for msg in client.iter_messages(entity, limit=500):
+
+    # Fetch messages with sender info in one pass (much faster)
+    async for msg in client.iter_messages(entity, limit=400, offset_date=None):
         if msg.date < since:
             break
-        if not msg.text:
+        if not msg.text or not isinstance(msg, Message):
             continue
 
-        sender = await msg.get_sender()
+        sender = msg.sender
         username = None
         full_name = "Неизвестно"
 
@@ -37,7 +39,7 @@ async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
         messages.append({
             "id": msg.id,
             "date": msg.date.strftime("%H:%M"),
-            "text": msg.text,
+            "text": msg.text[:300],
             "username": username,
             "full_name": full_name,
             "sender_id": sender.id if sender else None,

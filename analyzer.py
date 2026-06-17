@@ -11,8 +11,8 @@ def analyze_messages(messages: list[dict], group_name: str) -> dict:
         return {"error": "no_messages"}
 
     messages_text = "\n".join(
-        f"[{m['date']}] {m['full_name']} ({m['username'] or 'нет username'}): {m['text']}"
-        for m in messages
+        f"[{m['date']}] {m['full_name']} ({m['username'] or 'нет username'}): {m['text'][:300]}"
+        for m in messages[:400]  # max 400 messages per window
     )
 
     prompt = f"""Ты аналитик чата продавцов на маркетплейсах. Вот сообщения из группы за последние несколько часов:
