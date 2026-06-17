@@ -11,43 +11,43 @@ client = TelegramClient(_session, config.API_ID, config.API_HASH)
 
 
 async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
-    """Fetch messages from a group for the last N hours."""
     since = datetime.now(timezone.utc) - timedelta(hours=hours_back)
     messages = []
 
-    async with client:
-        entity = await client.get_entity(group_identifier)
-        async for msg in client.iter_messages(entity, limit=500):
-            if msg.date < since:
-                break
-            if not msg.text:
-                continue
+    await client.connect()
+    if not await client.is_user_authorized():
+        raise Exception("Telegram session is invalid. Regenerate SESSION_STRING.")
 
-            sender = await msg.get_sender()
-            username = None
-            full_name = "Неизвестно"
+    entity = await client.get_entity(group_identifier)
+    async for msg in client.iter_messages(entity, limit=500):
+        if msg.date < since:
+            break
+        if not msg.text:
+            continue
 
-            if isinstance(sender, User):
-                username = f"@{sender.username}" if sender.username else None
-                parts = [sender.first_name or "", sender.last_name or ""]
-                full_name = " ".join(p for p in parts if p).strip() or "Без имени"
+        sender = await msg.get_sender()
+        username = None
+        full_name = "Неизвестно"
 
-            messages.append({
-                "id": msg.id,
-                "date": msg.date.strftime("%H:%M"),
-                "text": msg.text,
-                "username": username,
-                "full_name": full_name,
-                "sender_id": sender.id if sender else None,
-            })
+        if isinstance(sender, User):
+            username = f"@{sender.username}" if sender.username else None
+            parts = [sender.first_name or "", sender.last_name or ""]
+            full_name = " ".join(p for p in parts if p).strip() or "Без имени"
 
-    # Reverse so oldest first
+        messages.append({
+            "id": msg.id,
+            "date": msg.date.strftime("%H:%M"),
+            "text": msg.text,
+            "username": username,
+            "full_name": full_name,
+            "sender_id": sender.id if sender else None,
+        })
+
     messages.reverse()
     return messages
 
 
 async def fetch_all_groups(hours_back: int) -> dict[str, list[dict]]:
-    """Fetch messages from all configured groups."""
     results = {}
     for group in config.MONITOR_GROUPS:
         try:
