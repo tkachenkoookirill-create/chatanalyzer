@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 async def run_report_job(lookback_hours: int):
     log.info(f"Starting report job (lookback={lookback_hours}h)...")
     try:
+        await reader.start_client()
         raw = await fetch_all_groups(hours_back=lookback_hours)
 
         analyzed = {}
@@ -73,8 +74,6 @@ def main():
     app.add_handler(CommandHandler("report", cmd_report))
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(reader.start_client())
-
     try:
         loop.run_until_complete(app.run_polling())
     except (KeyboardInterrupt, SystemExit):
