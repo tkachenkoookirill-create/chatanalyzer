@@ -1,9 +1,12 @@
+import os
 from datetime import datetime, timezone, timedelta
 from telethon import TelegramClient
+from telethon.sessions import StringSession
 from telethon.tl.types import User
 import config
 
-client = TelegramClient("session", config.API_ID, config.API_HASH)
+_session = StringSession(os.getenv("SESSION_STRING", "")) if os.getenv("SESSION_STRING") else "session"
+client = TelegramClient(_session, config.API_ID, config.API_HASH)
 
 
 async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
