@@ -29,18 +29,18 @@ def _format_group_report(group_name: str, analysis: dict) -> str:
     # Top topics
     topics = analysis.get("top_topics", [])
     if topics:
-        lines.append("🔥 *Горячие темы:*")
+        lines.append("🔥 Горячие темы:")
         for i, t in enumerate(topics[:5], 1):
             count_str = f"({t['count']} упом.)" if t.get("count") else ""
             lines.append(f"  {i}. {t['topic']} {count_str}")
             if t.get("summary"):
-                lines.append(f"     _{t['summary']}_")
+                lines.append(f"     {t['summary']}")
         lines.append("")
 
     # Marketplace questions
     questions = analysis.get("marketplace_questions", [])
     if questions:
-        lines.append("❓ *Вопросы про маркетплейс — напиши им:*")
+        lines.append("❓ Вопросы про маркетплейс — напиши им:")
         lines.append("─" * 30)
         for q in questions:
             username = q.get("username") or "нет username"
@@ -78,7 +78,6 @@ async def send_report(group_reports: dict[str, dict]) -> None:
         await _bot.send_message(
             chat_id=config.REPORT_CHAT_ID,
             text=chunk,
-            parse_mode="Markdown",
         )
 
 
