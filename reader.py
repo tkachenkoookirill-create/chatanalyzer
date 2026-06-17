@@ -21,7 +21,7 @@ async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
     entity = await client.get_entity(group_identifier)
 
     # Fetch messages with sender info in one pass (much faster)
-    async for msg in client.iter_messages(entity, limit=400, offset_date=None):
+    async for msg in client.iter_messages(entity, limit=30, offset_date=None):
         if msg.date < since:
             break
         if not msg.text or not isinstance(msg, Message):
