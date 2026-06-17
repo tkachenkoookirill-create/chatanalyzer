@@ -5,7 +5,8 @@ from telethon.sessions import StringSession
 from telethon.tl.types import User
 import config
 
-_session = StringSession(os.getenv("SESSION_STRING", "")) if os.getenv("SESSION_STRING") else "session"
+_session_str = os.getenv("SESSION_STRING", "").replace("\n", "").replace("\r", "").replace(" ", "").strip()
+_session = StringSession(_session_str) if _session_str else "session"
 client = TelegramClient(_session, config.API_ID, config.API_HASH)
 
 
