@@ -18,23 +18,30 @@ async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
     if not await client.is_user_authorized():
         raise Exception("Telegram session is invalid. Regenerate SESSION_STRING.")
 
-    entity = await client.get_entity(group_identifier)
+    import logging
+    log = logging.getLogger(__name__)
 
-    # Fetch messages with sender info in one pass (much faster)
+    log.info(f"Getting entity for {group_identifier}...")
+    entity = await client.get_entity(group_identifier)
+    log.info(f"Got entity, fetching messages...")
+
+    count = 0
     async for msg in client.iter_messages(entity, limit=30, offset_date=None):
+        count += 1
+        log.info(f"Message {count}: id={msg.id}")
         if msg.date < since:
             break
         if not msg.text or not isinstance(msg, Message):
             continue
 
-        sender = msg.sender
+        sender_id = msg.sender_id
         username = None
-        full_name = "Неизвестно"
+        full_name = f"User_{sender_id}" if sender_id else "Неизвестно"
 
-        if isinstance(sender, User):
-            username = f"@{sender.username}" if sender.username else None
-            parts = [sender.first_name or "", sender.last_name or ""]
-            full_name = " ".join(p for p in parts if p).strip() or "Без имени"
+        if msg.sender and isinstance(msg.sender, User):
+            username = f"@{msg.sender.username}" if msg.sender.username else None
+            parts = [msg.sender.first_name or "", msg.sender.last_name or ""]
+            full_name = " ".join(p for p in parts if p).strip() or full_name
 
         messages.append({
             "id": msg.id,
@@ -42,8 +49,10 @@ async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
             "text": msg.text[:300],
             "username": username,
             "full_name": full_name,
-            "sender_id": sender.id if sender else None,
+            "sender_id": sender_id,
         })
+
+    log.info(f"Done fetching, got {len(messages)} messages")
 
     messages.reverse()
     return messages
