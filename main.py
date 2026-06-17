@@ -16,10 +16,10 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
-async def run_report_job():
-    log.info("Starting report job...")
+async def run_report_job(lookback_hours: int):
+    log.info(f"Starting report job (lookback={lookback_hours}h)...")
     try:
-        raw = await fetch_all_groups(hours_back=config.LOOKBACK_HOURS)
+        raw = await fetch_all_groups(hours_back=lookback_hours)
 
         analyzed = {}
         for group, messages in raw.items():
@@ -42,16 +42,17 @@ def main():
 
     scheduler = AsyncIOScheduler(timezone="UTC")
 
-    for time_str in config.SCHEDULE_TIMES_UTC:
-        hour, minute = map(int, time_str.split(":"))
+    for window in config.SCHEDULE_WINDOWS:
+        hour, minute = map(int, window["utc_time"].split(":"))
         scheduler.add_job(
             run_report_job,
             CronTrigger(hour=hour, minute=minute),
-            id=f"report_{time_str}",
-            name=f"Report at {time_str} UTC",
+            kwargs={"lookback_hours": window["lookback_hours"]},
+            id=f"report_{window['utc_time']}",
+            name=f"Report at {window['utc_time']} UTC",
             replace_existing=True,
         )
-        log.info(f"Scheduled report at {time_str} UTC")
+        log.info(f"Scheduled report at {window['utc_time']} UTC (lookback={window['lookback_hours']}h)")
 
     scheduler.start()
     log.info("Scheduler started. Waiting for jobs...")

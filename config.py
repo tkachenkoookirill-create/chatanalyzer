@@ -19,9 +19,10 @@ CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "")
 # Example: "@sellers_wb,@ozon_sellers,-1001234567890"
 MONITOR_GROUPS = [g.strip() for g in os.getenv("MONITOR_GROUPS", "").split(",") if g.strip()]
 
-# Report schedule (UTC times) — adjust for your timezone
-# UTC+3 (Moscow/Kyiv): 9:00 → 06:00 UTC, 14:00 → 11:00 UTC, 19:00 → 16:00 UTC
-SCHEDULE_TIMES_UTC = ["06:00", "11:00", "16:00"]
-
-# How many hours back to look for messages each report window
-LOOKBACK_HOURS = 5
+# Report schedule (UTC times) with lookback hours for each window
+# Tashkent UTC+5: 11:00→06:00UTC (12h back), 16:00→11:00UTC (5h back), 21:00→16:00UTC (5h back)
+SCHEDULE_WINDOWS = [
+    {"utc_time": "06:00", "lookback_hours": 12, "label": "🌅 Утренний"},
+    {"utc_time": "11:00", "lookback_hours": 5,  "label": "☀️ Дневной"},
+    {"utc_time": "16:00", "lookback_hours": 5,  "label": "🌙 Вечерний"},
+]
