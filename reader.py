@@ -15,8 +15,6 @@ async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
     messages = []
 
     await client.connect()
-    if not await client.is_user_authorized():
-        raise Exception("Telegram session is invalid. Regenerate SESSION_STRING.")
 
     import logging
     log = logging.getLogger(__name__)
