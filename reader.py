@@ -1,32 +1,37 @@
 import os
+import logging
 from datetime import datetime, timezone, timedelta
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.tl.types import User, Message
 import config
 
+log = logging.getLogger(__name__)
+
 _session_str = os.getenv("SESSION_STRING", "").replace("\n", "").replace("\r", "").replace(" ", "").strip()
 _session = StringSession(_session_str) if _session_str else "session"
 client = TelegramClient(_session, config.API_ID, config.API_HASH)
+
+
+async def start_client():
+    """Connect once at startup and keep alive."""
+    if not client.is_connected():
+        log.info("Connecting Telethon client...")
+        await client.connect()
+        log.info("Telethon client connected.")
 
 
 async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
     since = datetime.now(timezone.utc) - timedelta(hours=hours_back)
     messages = []
 
-    await client.connect()
-
-    import logging
-    log = logging.getLogger(__name__)
-
     log.info(f"Getting entity for {group_identifier}...")
     entity = await client.get_entity(group_identifier)
-    log.info(f"Got entity, fetching messages...")
+    log.info(f"Got entity, fetching messages (limit=30)...")
 
     count = 0
-    async for msg in client.iter_messages(entity, limit=30, offset_date=None):
+    async for msg in client.iter_messages(entity, limit=30):
         count += 1
-        log.info(f"Message {count}: id={msg.id}")
         if msg.date < since:
             break
         if not msg.text or not isinstance(msg, Message):
@@ -50,8 +55,7 @@ async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
             "sender_id": sender_id,
         })
 
-    log.info(f"Done fetching, got {len(messages)} messages")
-
+    log.info(f"Done: got {len(messages)} messages from {count} checked")
     messages.reverse()
     return messages
 
@@ -63,5 +67,6 @@ async def fetch_all_groups(hours_back: int) -> dict[str, list[dict]]:
             msgs = await fetch_messages(group, hours_back)
             results[group] = msgs
         except Exception as e:
+            log.error(f"Error fetching {group}: {e}")
             results[group] = {"error": str(e)}
     return results

@@ -8,6 +8,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 import config
+import reader
 from reader import fetch_all_groups
 from analyzer import analyze_messages
 from reporter import send_report
@@ -72,6 +73,8 @@ def main():
     app.add_handler(CommandHandler("report", cmd_report))
 
     loop = asyncio.get_event_loop()
+    loop.run_until_complete(reader.start_client())
+
     try:
         loop.run_until_complete(app.run_polling())
     except (KeyboardInterrupt, SystemExit):
