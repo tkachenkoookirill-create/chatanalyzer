@@ -12,7 +12,7 @@ def analyze_messages(messages: list[dict], group_name: str) -> dict:
 
     messages_text = "\n".join(
         f"[{m['date']}] {m['full_name']} ({m['username'] or 'нет username'}): {m['text'][:300]}"
-        for m in messages[:30]  # test limit
+        for m in messages[:300]
     )
 
     prompt = f"""Ты аналитик чата продавцов на маркетплейсах. Вот сообщения из группы за последние несколько часов:

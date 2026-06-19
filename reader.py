@@ -27,10 +27,10 @@ async def fetch_messages(group_identifier: str, hours_back: int) -> list[dict]:
 
     log.info(f"Getting entity for {group_identifier}...")
     entity = await client.get_entity(group_identifier)
-    log.info(f"Got entity, fetching messages (limit=30)...")
+    log.info(f"Got entity, fetching messages (limit=300)...")
 
     count = 0
-    async for msg in client.iter_messages(entity, limit=30):
+    async for msg in client.iter_messages(entity, limit=300):
         count += 1
         if msg.date < since:
             break
