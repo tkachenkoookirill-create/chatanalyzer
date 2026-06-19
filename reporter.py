@@ -12,9 +12,9 @@ PERIOD_LABELS = {
 
 
 def _period_label(utc_hour: int) -> str:
-    if utc_hour < 9:
+    if utc_hour < 7:
         return "🌅 Утренний"
-    elif utc_hour < 14:
+    elif utc_hour < 13:
         return "☀️ Дневной"
     return "🌙 Вечерний"
 
